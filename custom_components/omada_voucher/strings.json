@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Omada Hotspot Voucher einrichten",
+        "description": "Controller-Zugangsdaten für Dashboard & Geräte.\n\nFür Voucher-**Codes** (nicht nur Zähler): Hotspot Operator-Zugangsdaten angeben\n(Omada → Hotspot → Operators).",
+        "data": {
+          "host": "Controller URL (z.B. https://omada.bremke.de)",
+          "username": "Controller Benutzername",
+          "password": "Controller Passwort",
+          "site_name": "Site-Name (z.B. Home)",
+          "hotspot_username": "Hotspot Operator Benutzername (optional, für Codes)",
+          "hotspot_password": "Hotspot Operator Passwort (optional, für Codes)",
+          "verify_ssl": "SSL-Zertifikat prüfen",
+          "scan_interval": "Aktualisierungsintervall (Sekunden)"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Ungültige Controller-Anmeldedaten",
+      "cannot_connect": "Verbindung fehlgeschlagen",
+      "site_not_found": "Site-Name nicht gefunden"
+    },
+    "abort": {
+      "already_configured": "Diese Site ist bereits konfiguriert"
+    }
+  }
+}

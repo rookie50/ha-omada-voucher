@@ -1,0 +1,111 @@
+create_vouchers:
+  name: Voucher-Gruppe erstellen
+  description: >
+    Erstellt eine neue Voucher-Gruppe im Omada Hotspot-Manager.
+  fields:
+    group_name:
+      name: Gruppenname
+      description: Name der neuen Voucher-Gruppe
+      required: true
+      example: "Tagesgäste April"
+      selector:
+        text:
+    count:
+      name: Anzahl
+      description: Anzahl der zu erzeugenden Voucher (1–5000)
+      required: false
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 5000
+          mode: box
+    code_length:
+      name: Code-Länge
+      description: Länge des Voucher-Codes (6–10)
+      required: false
+      default: 6
+      selector:
+        number:
+          min: 6
+          max: 10
+          mode: box
+    type:
+      name: Typ
+      description: "0 = Nutzungen begrenzen, 1 = Online-Nutzer begrenzen, 2 = Unbegrenzt"
+      required: false
+      default: 0
+      selector:
+        select:
+          options:
+            - label: "Nutzungen begrenzen"
+              value: "0"
+            - label: "Online-Nutzer begrenzen"
+              value: "1"
+            - label: "Unbegrenzt"
+              value: "2"
+    type_value:
+      name: Max. Nutzungen / Nutzer
+      description: Maximale Anzahl Nutzungen oder gleichzeitiger Nutzer (für Typ 0 oder 1)
+      required: false
+      default: 1
+      selector:
+        number:
+          min: 1
+          max: 999
+          mode: box
+    expire_start:
+      name: Gültig ab
+      description: "Startdatum im Format YYYY-MM-DD (optional)"
+      required: false
+      example: "2026-04-06"
+      selector:
+        text:
+    expire_end:
+      name: Gültig bis
+      description: "Ablaufdatum im Format YYYY-MM-DD (optional)"
+      required: false
+      example: "2027-04-06"
+      selector:
+        text:
+
+delete_group:
+  name: Voucher-Gruppe löschen
+  description: >
+    Löscht eine Voucher-Gruppe (und alle enthaltenen Voucher) anhand der Group-ID.
+  fields:
+    group_id:
+      name: Gruppen-ID
+      description: Die interne ID der Voucher-Gruppe (aus den Sensor-Attributen)
+      required: true
+      example: "abc123def456"
+      selector:
+        text:
+
+replenish_group:
+  name: Voucher-Gruppe auffüllen
+  description: >
+    Fügt einer bestehenden Voucher-Gruppe neue Voucher hinzu.
+  fields:
+    group_id:
+      name: Gruppen-ID
+      description: Die interne ID der Voucher-Gruppe
+      required: true
+      selector:
+        text:
+    count:
+      name: Anzahl
+      description: Anzahl der hinzuzufügenden Voucher
+      required: true
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 5000
+          mode: box
+
+reload_codes:
+  name: Voucher Codes neu laden
+  description: >
+    Aktualisiert die Voucher-Code-Sensoren sofort (nächste freie Codes).
+    Aufrufen nachdem ein Code genutzt wurde, damit der nächste Code angezeigt wird.

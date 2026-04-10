@@ -1,0 +1,12 @@
+{
+  "domain": "omada_voucher",
+  "name": "Omada Hotspot Voucher",
+  "version": "3.0.0",
+  "documentation": "https://github.com/bremke/ha-omada-voucher",
+  "issue_tracker": "https://github.com/bremke/ha-omada-voucher/issues",
+  "dependencies": [],
+  "codeowners": ["@bremke"],
+  "requirements": [],
+  "iot_class": "local_polling",
+  "config_flow": true
+}
