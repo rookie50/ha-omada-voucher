@@ -32,7 +32,7 @@ Custom Home Assistant integration for managing and displaying TP-Link Omada Hots
 ### Via HACS (recommended)
 
 1. Add this repository as a custom repository in HACS:  
-   `https://github.com/bremke/ha-omada-voucher`  
+   `https://github.com/rookie50/ha-omada-voucher`  
    Category: **Integration**
 2. Install **Omada Hotspot Voucher**
 3. Restart Home Assistant
