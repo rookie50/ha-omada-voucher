@@ -32,6 +32,7 @@ SITES_PATH         = "/{omadac_id}/api/v2/user/sites"
 VOUCHER_GROUPS_PATH = "/{omadac_id}/api/v2/hotspot/sites/{site_id}/voucherGroups"
 VOUCHER_GROUP_PATH  = "/{omadac_id}/api/v2/hotspot/sites/{site_id}/voucherGroups/{group_id}"
 GROUP_VOUCHERS_PATH = "/{omadac_id}/api/v2/hotspot/sites/{site_id}/voucherGroups/{group_id}/vouchers"
+CLIENT_PATH         = "/{omadac_id}/api/v2/sites/{site_id}/clients/{client_mac}"
 
 
 class OmadaApiError(Exception):
@@ -376,3 +377,26 @@ class OmadaVoucherApi:
     async def async_get_remaining_count(self, group_id: str) -> int:
         group = await self.async_get_voucher_group(group_id)
         return int(group.get("unusedCount", 0) or 0)
+
+    # ------------------------------------------------------------------
+    # Client API
+    # ------------------------------------------------------------------
+
+    async def async_set_client_name(
+        self,
+        client_mac: str,
+        name: str,
+        device_type: str | None = None,
+        device_model: str | None = None,
+    ) -> dict:
+        path = CLIENT_PATH.format(
+            omadac_id=self._omadac_id, site_id=self._site_id, client_mac=client_mac,
+        )
+        body: dict[str, Any] = {"name": name}
+        if device_type or device_model:
+            body["clientInfoCorrection"] = {}
+            if device_type:
+                body["clientInfoCorrection"]["type"] = device_type
+            if device_model:
+                body["clientInfoCorrection"]["model"] = device_model
+        return await self._request("PATCH", path, data=body)
