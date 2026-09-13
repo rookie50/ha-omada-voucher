@@ -109,3 +109,36 @@ reload_codes:
   description: >
     Aktualisiert die Voucher-Code-Sensoren sofort (nächste freie Codes).
     Aufrufen nachdem ein Code genutzt wurde, damit der nächste Code angezeigt wird.
+
+set_client_name:
+  name: Client-Name setzen
+  description: >
+    Setzt den Namen eines Clients im Omada-Controller anhand der MAC-Adresse.
+    Wenn der Name leer ist, wird nichts geschrieben.
+  fields:
+    client_mac:
+      name: MAC-Adresse
+      description: MAC-Adresse des Clients (z.B. AA-BB-CC-DD-EE-FF)
+      required: true
+      example: "AA-BB-CC-DD-EE-FF"
+      selector:
+        text:
+    client_name:
+      name: Client-Name
+      description: Der gewünschte Name für den Client
+      required: true
+      example: "Wohnzimmer-Laptop"
+      selector:
+        text:
+    device_type:
+      name: Gerätetyp
+      description: "Gerätetyp-Korrektur (optional, z.B. Server, Phone)"
+      required: false
+      selector:
+        text:
+    device_model:
+      name: Gerätemodell
+      description: "Gerätemodell-Korrektur (optional, z.B. iPhone 15)"
+      required: false
+      selector:
+        text:

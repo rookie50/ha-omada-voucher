@@ -10,6 +10,8 @@ from homeassistant.helpers import config_validation as cv
 
 from .api import OmadaVoucherApi
 from .const import (
+    ATTR_CLIENT_DEVICE_MODEL, ATTR_CLIENT_DEVICE_TYPE,
+    ATTR_CLIENT_MAC, ATTR_CLIENT_NAME,
     ATTR_CODE_FORMAT, ATTR_CODE_LENGTH, ATTR_COUNT,
     ATTR_EXPIRE_END, ATTR_EXPIRE_START, ATTR_GROUP_ID,
     ATTR_GROUP_NAME, ATTR_TYPE, ATTR_TYPE_VALUE,
@@ -19,6 +21,7 @@ from .const import (
     DATA_COORDINATOR, DEFAULT_SCAN_INTERVAL, DEFAULT_VERIFY_SSL,
     DOMAIN, SERVICE_CREATE_VOUCHERS, SERVICE_DELETE_GROUP,
     SERVICE_RELOAD_CODES, SERVICE_REPLENISH_GROUP,
+    SERVICE_SET_CLIENT_NAME,
 )
 from .coordinator import OmadaVoucherCoordinator
 
@@ -30,7 +33,7 @@ CREATE_VOUCHERS_SCHEMA = vol.Schema({
     vol.Optional(ATTR_COUNT, default=10): vol.All(int, vol.Range(min=1, max=5000)),
     vol.Optional(ATTR_CODE_LENGTH, default=6): vol.All(int, vol.Range(min=6, max=10)),
     vol.Optional(ATTR_CODE_FORMAT, default=["NUM"]): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_TYPE, default=0): vol.In([0, 1, 2]),
+    vol.Optional(ATTR_TYPE, default=0): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
     vol.Optional(ATTR_TYPE_VALUE, default=1): vol.All(int, vol.Range(min=1, max=999)),
     vol.Optional(ATTR_EXPIRE_START): cv.string,
     vol.Optional(ATTR_EXPIRE_END): cv.string,
@@ -41,6 +44,12 @@ REPLENISH_GROUP_SCHEMA = vol.Schema({
     vol.Required(ATTR_COUNT): vol.All(int, vol.Range(min=1, max=5000)),
 })
 RELOAD_CODES_SCHEMA = vol.Schema({})
+SET_CLIENT_NAME_SCHEMA = vol.Schema({
+    vol.Required(ATTR_CLIENT_MAC): cv.string,
+    vol.Required(ATTR_CLIENT_NAME): cv.string,
+    vol.Optional(ATTR_CLIENT_DEVICE_TYPE): cv.string,
+    vol.Optional(ATTR_CLIENT_DEVICE_MODEL): cv.string,
+})
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -61,17 +70,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hotspot_password=hotspot_pass,
     )
 
+    from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+    from .api import OmadaAuthError
+
     try:
         await api.login()
+    except OmadaAuthError as err:
+        raise ConfigEntryAuthFailed(f"Controller login failed: {err}") from err
     except Exception as err:
-        _LOGGER.error("Controller login failed: %s", err)
-        return False
-
-    # Hotspot login – optional, don't fail if it doesn't work
-    try:
-        await api._hotspot_login()
-    except Exception as err:
-        _LOGGER.error("Hotspot login FAILED - codes will show as dash. Error: %s", err)
+        raise ConfigEntryNotReady(f"Controller login failed: {err}") from err
 
     coordinator = OmadaVoucherCoordinator(
         hass, api,
@@ -107,11 +114,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.async_request_refresh()
         _LOGGER.info("Voucher codes refreshed")
 
+    async def handle_set_client_name(call: ServiceCall) -> None:
+        name = call.data[ATTR_CLIENT_NAME].strip()
+        if not name:
+            _LOGGER.debug("Empty client name — skipping")
+            return
+        await api.async_set_client_name(
+            client_mac=call.data[ATTR_CLIENT_MAC],
+            name=name,
+            device_type=call.data.get(ATTR_CLIENT_DEVICE_TYPE),
+            device_model=call.data.get(ATTR_CLIENT_DEVICE_MODEL),
+        )
+        _LOGGER.info("Client %s named '%s'", call.data[ATTR_CLIENT_MAC], name)
+
     if not hass.services.has_service(DOMAIN, SERVICE_CREATE_VOUCHERS):
         hass.services.async_register(DOMAIN, SERVICE_CREATE_VOUCHERS, handle_create_vouchers, schema=CREATE_VOUCHERS_SCHEMA)
         hass.services.async_register(DOMAIN, SERVICE_DELETE_GROUP, handle_delete_group, schema=DELETE_GROUP_SCHEMA)
         hass.services.async_register(DOMAIN, SERVICE_REPLENISH_GROUP, handle_replenish_group, schema=REPLENISH_GROUP_SCHEMA)
         hass.services.async_register(DOMAIN, SERVICE_RELOAD_CODES, handle_reload_codes, schema=RELOAD_CODES_SCHEMA)
+        hass.services.async_register(DOMAIN, SERVICE_SET_CLIENT_NAME, handle_set_client_name, schema=SET_CLIENT_NAME_SCHEMA)
 
     return True
 
@@ -122,6 +143,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data = hass.data[DOMAIN].pop(entry.entry_id)
         await data["api"].close()
         if not hass.data[DOMAIN]:
-            for svc in [SERVICE_CREATE_VOUCHERS, SERVICE_DELETE_GROUP, SERVICE_REPLENISH_GROUP, SERVICE_RELOAD_CODES]:
+            for svc in [SERVICE_CREATE_VOUCHERS, SERVICE_DELETE_GROUP, SERVICE_REPLENISH_GROUP, SERVICE_RELOAD_CODES, SERVICE_SET_CLIENT_NAME]:
                 hass.services.async_remove(DOMAIN, svc)
     return unload_ok

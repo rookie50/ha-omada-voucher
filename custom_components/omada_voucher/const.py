@@ -33,4 +33,11 @@ ATTR_TYPE_VALUE = "type_value"
 ATTR_EXPIRE_START = "expire_start"
 ATTR_EXPIRE_END = "expire_end"
 
+SERVICE_SET_CLIENT_NAME = "set_client_name"
+
+ATTR_CLIENT_MAC = "client_mac"
+ATTR_CLIENT_NAME = "client_name"
+ATTR_CLIENT_DEVICE_TYPE = "device_type"
+ATTR_CLIENT_DEVICE_MODEL = "device_model"
+
 DATA_COORDINATOR = "coordinator"

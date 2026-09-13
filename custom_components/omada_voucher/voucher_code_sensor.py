@@ -100,4 +100,5 @@ class VoucherCodeSensor(CoordinatorEntity, SensorEntity):
         await self.async_update_code()
 
     def _handle_coordinator_update(self) -> None:
+        super()._handle_coordinator_update()
         self.hass.async_create_task(self.async_update_code())

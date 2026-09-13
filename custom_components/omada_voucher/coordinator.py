@@ -29,6 +29,8 @@ class OmadaVoucherCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             groups = await self.api.async_get_voucher_groups()
         except OmadaApiError as err:
             raise UpdateFailed(f"Omada API error: {err}") from err
+        except Exception as err:
+            raise UpdateFailed(f"Unexpected error: {err}") from err
 
         result = {}
         for g in groups:
