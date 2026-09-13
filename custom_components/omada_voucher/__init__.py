@@ -30,7 +30,7 @@ CREATE_VOUCHERS_SCHEMA = vol.Schema({
     vol.Optional(ATTR_COUNT, default=10): vol.All(int, vol.Range(min=1, max=5000)),
     vol.Optional(ATTR_CODE_LENGTH, default=6): vol.All(int, vol.Range(min=6, max=10)),
     vol.Optional(ATTR_CODE_FORMAT, default=["NUM"]): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(ATTR_TYPE, default=0): vol.In([0, 1, 2]),
+    vol.Optional(ATTR_TYPE, default=0): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
     vol.Optional(ATTR_TYPE_VALUE, default=1): vol.All(int, vol.Range(min=1, max=999)),
     vol.Optional(ATTR_EXPIRE_START): cv.string,
     vol.Optional(ATTR_EXPIRE_END): cv.string,
@@ -61,17 +61,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hotspot_password=hotspot_pass,
     )
 
+    from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+    from .api import OmadaAuthError
+
     try:
         await api.login()
+    except OmadaAuthError as err:
+        raise ConfigEntryAuthFailed(f"Controller login failed: {err}") from err
     except Exception as err:
-        _LOGGER.error("Controller login failed: %s", err)
-        return False
-
-    # Hotspot login – optional, don't fail if it doesn't work
-    try:
-        await api._hotspot_login()
-    except Exception as err:
-        _LOGGER.error("Hotspot login FAILED - codes will show as dash. Error: %s", err)
+        raise ConfigEntryNotReady(f"Controller login failed: {err}") from err
 
     coordinator = OmadaVoucherCoordinator(
         hass, api,

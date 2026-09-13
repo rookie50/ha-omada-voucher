@@ -122,7 +122,7 @@ class OmadaVoucherApi:
         url = f"{self._host}{path}"
         _LOGGER.debug("%s %s", method, url)
         try:
-            async with session.request(method, url, json=data, params=params, headers=self._headers()) as resp:
+            async with session.request(method, url, json=data, params=params, headers=self._headers(), timeout=aiohttp.ClientTimeout(total=30)) as resp:
                 if resp.status == 401 and retry_auth:
                     await self.login()
                     return await self._request(method, path, data, params, retry_auth=False)
@@ -150,7 +150,7 @@ class OmadaVoucherApi:
         session = await self._get_session()
         url = f"{self._host}{INFO_PATH}"
         try:
-            async with session.get(url) as resp:
+            async with session.get(url, timeout=aiohttp.ClientTimeout(total=30)) as resp:
                 if resp.status != 200:
                     raise OmadaApiError(f"GET /api/info HTTP {resp.status}")
                 payload = await resp.json(content_type=None)
@@ -191,7 +191,7 @@ class OmadaVoucherApi:
         _LOGGER.debug("Fetching CSRF token from %s", csrf_url)
         csrf_token = ""
         try:
-            async with session.get(csrf_url, params={"needToken": "true"}) as resp:
+            async with session.get(csrf_url, params={"needToken": "true"}, timeout=aiohttp.ClientTimeout(total=30)) as resp:
                 if resp.status == 200:
                     d = await resp.json(content_type=None)
                     csrf_token = d.get("result", {}).get("csrfToken", "")
@@ -211,6 +211,7 @@ class OmadaVoucherApi:
                 login_url,
                 json={"username": self._username, "password": self._password},
                 headers=headers,
+                timeout=aiohttp.ClientTimeout(total=30),
             ) as resp:
                 if resp.status != 200:
                     text = await resp.text()
